@@ -1,0 +1,23 @@
+==== EPP Reverse Proxy ====
+
+Installation:
+	Extract to /usr/local/epp or checkout from hg
+	Copy init/epp-rproxy to /etc/init.d/
+	Copy etc/epp-rproxy.conf to /etc/ and edit for your system
+	Touch /etc/sysconfig/epp-rproxy
+
+Usage:
+	Use the init script to start and stop the service. For testing,
+	it can also be run manually like this:
+
+	env PYTHONPATH="$PYTHONPATH:/usr/local/epp" \
+	  EPP_RPROXY_CONFIG="/usr/local/epp/etc/epp-rproxy.conf" \
+	  twistd -noy bin/epp-rproxy.tac
+
+Notes:
+	Authentication is not required per connection. It probably
+	wouldn't be that hard to implement though. This means that
+	once a successful login has happened, new login will appear
+	to succeed regardless of their clID or pw and commands will
+	not be truely authenticated. Protect your proxy well. Or
+	implement client auth comparison.

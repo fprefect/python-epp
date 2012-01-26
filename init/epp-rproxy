@@ -1,0 +1,79 @@
+#!/bin/bash
+#
+# epp-rproxy      EPP Reverse Proxy
+#
+# chkconfig: 2345 80 30
+# description: EPP Reverse Proxy is a python/twisted program for \
+#              proxying connections to EPP servers
+# processname: twistd
+# pidfile: /var/run/epp-rproxy.pid
+# config: /etc/epp/epp-rproxy.conf
+#
+# Based on startup script from Simon J Mudd <sjmudd@pobox.com>
+
+# Source function library.
+. /etc/rc.d/init.d/functions
+
+EPP_BASE="/usr/local/python-epp"
+PIDFILE="/var/run/epp-rproxy.pid"
+TWISTD="/usr/local/bin/twistd"
+TWISTD_OPTS=
+LOGFILE="/var/log/epp-rproxy.log"
+
+if [ -f /etc/sysconfig/epp-rproxy ]; then
+	. /etc/sysconfig/epp-rproxy
+fi
+
+[ -x $TWISTD ] || exit 0
+[ -d $EPP_BASE ] || exit 0
+
+RETVAL=0
+prog="epp-rproxy"
+
+start() {
+	# Start daemons.
+	echo -n $"Starting $prog: "
+	env PYTHONPATH=$EPP_BASE $TWISTD -o --pidfile=$PIDFILE -l $LOGFILE $TWISTD_OPTS epp-rproxy && success || failure $"$prog start"
+	RETVAL=$?
+	[ $RETVAL -eq 0 ] && touch /var/lock/subsys/epp-rproxy
+    echo
+	return $RETVAL
+}
+
+stop() {
+	# Stop daemons.
+	echo -n $"Shutting down $prog: "
+	killproc epp-rproxy
+	RETVAL=$?
+	[ $RETVAL -eq 0 ] && rm -f /var/lock/subsys/epp-rproxy
+	echo
+	return $RETVAL
+}
+
+restart() {
+	stop
+	start
+}
+
+# See how we were called.
+case "$1" in
+  start)
+	start
+	;;
+  stop)
+	stop
+	;;
+  restart)
+	stop
+	start
+	;;
+  condrestart)
+	[ -f /var/lock/subsys/epp-rproxy ] && restart || :
+	;;
+  *)
+	echo $"Usage: $0 {start|stop|restart|condrestart}"
+	exit 1
+esac
+
+exit $?
+
